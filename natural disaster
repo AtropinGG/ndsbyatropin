@@ -1,0 +1,205 @@
+local broadcastDisaster = false
+local notifyChanges = true
+local autofarm = false
+local saveUserFromDeath = true
+local savedValues = {["Gravity"] = workspace.Gravity;};
+
+local mode = "gravity"
+
+game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+	Text = "{System} Getting things ready, please wait...",
+	Color = Color3.fromRGB(255, 235, 85),
+	Font = Enum.Font.SourceSansBold
+})
+
+if notifyChanges == false then
+	game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+		Text = "{System} You currently have the notifyChanges variable set to \'false\', if you want it on please change the value from \'false\' to \'true\'. You can also use the command \'notifychanges/true\'",
+		Color = Color3.fromRGB(255, 85, 85),
+		Font = Enum.Font.SourceSansBold
+	})
+end
+
+local OnCharacterAdded = function(Character)
+	coroutine.resume(coroutine.create(function()
+		repeat
+			wait()
+		until Character:FindFirstChildWhichIsA("Humanoid")
+		local Humanoid = Character:FindFirstChildWhichIsA("Humanoid")
+		Humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+			if saveUserFromDeath == false then
+				return
+			end
+			for index,value in pairs(workspace:GetDescendants()) do
+				if value:IsA("SpawnLocation") then
+					Character:MoveTo(value.Position)
+				end
+			end
+		end)
+	end))
+	coroutine.resume(coroutine.create(function()
+		SurvivalTag = Character:WaitForChild("SurvivalTag")
+		if notifyChanges == true then
+			game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+				Text = string.format("{System} The upcoming disaster will be a %s", SurvivalTag.Value),
+				Color = Color3.fromRGB(255, 235, 85),
+				Font = Enum.Font.SourceSansBold
+			})
+			coroutine.resume(coroutine.create(function()
+				local lastvalue = ""
+				while wait(0.05) do
+					if lastvalue ~= SurvivalTag.Value then
+						lastvalue = SurvivalTag.Value
+						game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+							Text = string.format("{System} The upcoming disaster will be a %s", SurvivalTag.Value),
+							Color = Color3.fromRGB(255, 235, 85),
+							Font = Enum.Font.SourceSansBold
+						})
+						repeat
+							wait()
+						until lastvalue == SurvivalTag.Value
+					end
+				end
+			end))
+		end
+		if broadcastDisaster == true then
+			game:GetService("ReplicatedStorage")["DefaultChatSystemChatEvents"].SayMessageRequest:FireServer(string.format("[LuminentialBot]: The upcoming disaster will be a %s", SurvivalTag.Value),"All")
+		end
+	end))
+	coroutine.resume(coroutine.create(function()
+		local FallDamageScript = Character:WaitForChild("FallDamageScript")
+		FallDamageScript:Destroy()
+		if notifyChanges == true then
+			game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+				Text = "{System} FallDamageScript has been destroyed.",
+				Color = Color3.fromRGB(255, 235, 85),
+				Font = Enum.Font.SourceSansBold
+			})
+		end
+	end))
+end
+
+game:GetService("Players").LocalPlayer.CharacterAdded:Connect(OnCharacterAdded)
+pcall(OnCharacterAdded,game:GetService("Players").LocalPlayer.Character)
+
+game:GetService("UserInputService").InputBegan:Connect(function(InputObject,gameProcessedEvent)
+	if gameProcessedEvent == true then
+		return
+	end
+	if InputObject.KeyCode == Enum.KeyCode.Equals or InputObject.KeyCode == Enum.KeyCode.KeypadPlus then
+		if mode == "gravity" then
+			workspace.Gravity = workspace.Gravity + 10
+			game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+				Text = string.format("{System} Gravity has been increased by 10, current gravity is %s.", workspace.Gravity),
+				Color = Color3.fromRGB(255, 235, 85),
+				Font = Enum.Font.SourceSansBold
+			})
+		elseif mode == "walkspeed" then
+			game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed + 3
+			game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+				Text = string.format("{System} WalkSpeed has been increased by 3, current WalkSpeed is %s.", game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed),
+				Color = Color3.fromRGB(255, 235, 85),
+				Font = Enum.Font.SourceSansBold
+			})
+		end
+	elseif InputObject.KeyCode == Enum.KeyCode.Minus or InputObject.KeyCode == Enum.KeyCode.KeypadMinus then
+		if mode == "gravity" then
+			workspace.Gravity = workspace.Gravity - 10
+			game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+				Text = string.format("{System} Gravity has been decreased by 10, current gravity is %s.", workspace.Gravity),
+				Color = Color3.fromRGB(255, 235, 85),
+				Font = Enum.Font.SourceSansBold
+			})
+		elseif mode == "walkspeed" then
+			game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed - 3
+			game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+				Text = string.format("{System} WalkSpeed has been decreased by 3, current WalkSpeed is %s.", game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed),
+				Color = Color3.fromRGB(255, 235, 85),
+				Font = Enum.Font.SourceSansBold
+			})
+		end
+	elseif InputObject.KeyCode == Enum.KeyCode.G then
+		if mode == "gravity" then
+			workspace.Gravity = savedValues["Gravity"]
+			game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+				Text = string.format("{System} Gravity has been reset, current gravity is %s.", workspace.Gravity),
+				Color = Color3.fromRGB(255, 235, 85),
+				Font = Enum.Font.SourceSansBold
+			})
+		elseif mode == "walkspeed" then
+			game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed = game:GetService("StarterPlayer").CharacterWalkSpeed
+			game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+				Text = string.format("{System} WalkSpeed has been reset, current WalkSpeed is %s.", game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid").WalkSpeed),
+				Color = Color3.fromRGB(255, 235, 85),
+				Font = Enum.Font.SourceSansBold
+			})
+		end
+	elseif InputObject.KeyCode == Enum.KeyCode.H then
+		if mode == "gravity" then
+			mode = "walkspeed"
+		elseif mode == "walkspeed" then
+			mode = "gravity"
+		end
+	end
+end)
+
+local onChatted = function(Message,Recipient)
+	if typeof(Recipient) == "Instance" and table.find({"autofarm","notifychanges","broadcastdisaster"}) then
+		game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+			Text = string.format("{System} Commands should be ran outside of pms"),
+			Color = Color3.fromRGB(255, 235, 85),
+			Font = Enum.Font.SourceSansBold
+		})
+		return
+	end
+	local commands = {
+		["autofarm/"] = function(value)
+			local boolean = (string.sub(value,1,4) == "true" and true) or (string.sub(value,1,5) == "false" and false)
+			autofarm = boolean
+		end,
+		["notifychange/"] = function(value)
+			local boolean = (string.sub(value,1,4) == "true" and true) or (string.sub(value,1,5) == "false" and false)
+			notifyChanges = boolean
+		end,
+		["broadcastdisaster/"] = function(value)
+			local boolean = (string.sub(value,1,4) == "true" and true) or (string.sub(value,1,5) == "false" and false)
+			broadcastDisaster = boolean
+		end,
+	};
+	for index,value in pairs(commands) do
+		if string.lower(tostring(index)) == string.sub(string.lower(Message),1,string.len(index)) then
+			commands[index](string.sub(Message,string.len(tostring(index)) + 1))
+
+			game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage",{
+				Text = string.format("{System} Ran a command: %s",tostring(index)),
+				Color = Color3.fromRGB(255, 235, 85),
+				Font = Enum.Font.SourceSansBold
+			})
+		end
+	end
+end
+
+game:GetService("Players").LocalPlayer.Chatted:Connect(onChatted)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+	pcall(function()
+		if not autofarm then
+			return error("Autofarm is not enabled!")
+		end
+		game:GetService("Players").LocalPlayer.Character:FindFirstChild("HumanoidRootPart").CFrame = CFrame.new(math.random(-230,280), 180, math.random(290,380)) * CFrame.Angles(math.rad(0), math.rad(0), math.rad(0))
+		game:GetService("Players").LocalPlayer.Character:FindFirstChild("HumanoidRootPart").RotVelocity = Vector3.new(0, 0, 0)
+		game:GetService("Players").LocalPlayer.Character:FindFirstChild("HumanoidRootPart").Velocity = Vector3.new(0, 0, 0)
+	end)
+	pcall(function()
+		if game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui"):FindFirstChild("SandStormGui") then
+			game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")["SandStormGui"].Enabled = false
+		end
+		if game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui"):FindFirstChild("BlizzardGui") then
+			game:GetService("Players").LocalPlayer:FindFirstChildWhichIsA("PlayerGui")["BlizzardGui"].Enabled = false
+		end
+		game:GetService("Lighting").FogColor = Color3.fromRGB(255, 255, 255)
+		game:GetService("Lighting").FogEnd = 1e4
+		game:GetService("Lighting").FogStart = game:GetService("Lighting").FogEnd - 1
+		pcall(function() workspace.Structure.Cloud:Destroy() end)
+	end)
+end)
